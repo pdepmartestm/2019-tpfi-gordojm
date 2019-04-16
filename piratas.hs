@@ -74,23 +74,24 @@ willTurner = UnPirata{
 nombre = "Will Turner",
 botin = [("cuchillo",5)]
 }
+
 ----------------
-
---soloTesorosValiosos pirata tesoro | esValioso(tesoro) = adquirirTesoro pirata tesoro
--- | otherwise = id
-
+soloTesorosValiosos :: Pirata->Tesoro->Pirata
+soloTesorosValiosos pirata tesoro |esValioso tesoro = adquirirTesoro pirata tesoro
+								  |otherwise = pirata
 
 
 --tesorosConNombreEspecifico pirata tesoro | tieneDeNombre (nombreTesoro pirata) tesoro = adquirirTesoro pirata tesoro
 -- | otherwise = id
 
---tieneCorazon pirata tesoro = id
+tieneCorazon pirata tesoro = pirata
 
 --cumpleAlguna | soloTesorosValiosos || tesorosConNombreEspecifico = adquirirTesoro pirata tesoros
 -- | otherwise = id
 
 --Saquear
-saquear formaDeSaqueo tesoro pirata = formaDeSaqueo pirata tesoro
+
+saquear formaDeSaqueo pirata tesoro = formaDeSaqueo pirata tesoro
 
 --3
 
@@ -125,6 +126,3 @@ holandesErrante = UnBarco {
 nombreBarco = "Holandés Errante",
 tripulacion = [davidJones]
 }
-
-
-
