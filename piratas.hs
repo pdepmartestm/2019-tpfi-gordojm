@@ -1,42 +1,48 @@
 import Data.List  
+import Text.Show.Functions
 
 data Pirata = UnPirata{
 nombre :: String,
 botin :: [Tesoro]
-} deriving(Eq)
+} deriving(Eq, Show)
 
-type Tesoro = (String, Int)
+data Tesoro = UnTesoro{
+nombreTesoro :: String,
+valor :: Int
+} deriving(Eq, Show)
 
 data Barco = UnBarco{
 nombreBarco :: String,
 tripulacion :: [Pirata]
-} deriving(Eq)
+} deriving(Eq, Show)
 
-cantidadTesoros::Pirata->Int
+cantidadTesoros :: Pirata -> Int
 cantidadTesoros pirata = length (botin pirata)
 
-valorBotin :: Pirata->Int
-valorBotin pirata = sum (map snd (botin pirata))
+valoresBotin :: Pirata -> [Int]
+valoresBotin pirata = map valor (botin pirata)
 
-valoresBotin :: Pirata->[Int]
-valoresBotin pirata = map snd (botin pirata)
+valorBotin :: Pirata -> Int
+valorBotin pirata = sum (valoresBotin pirata)
 
-esAfortunado::Pirata->Bool
-esAfortunado pirata = (valorBotin pirata) > 1000
+esAfortunado :: Pirata -> Bool
+esAfortunado pirata = (valorBotin pirata) > 10000
 
---mismoTesoro pirata1 pirata2 tesoro = elem Tesoro pirata1.botin && elem tesoro pirata1.botin
---mismoDistinto pirata1 pirata2 tesoro = mismoTesoro pirata1 pirata2 tesoro && (snd )
+tieneTesoro :: Pirata -> Tesoro -> Bool
+tieneTesoro pirata tesoro = elem tesoro (botin pirata)
 
-
+mismoTesoro::Pirata->Pirata->Tesoro->Bool
+mismoTesoro pirata1 pirata2 tesoro = tieneTesoro pirata1 tesoro && tieneTesoro pirata2 tesoro
+--mismoDistinto pirata1 pirata2 nombreTesoro = mismoTesoro pirata1 pirata2 tesoro && (snd tesoro) /=
 
 tesoroMasValioso::Pirata->Int
 tesoroMasValioso pirata = maximum (valoresBotin pirata)
 
-adquirirTesoro::Pirata->Tesoro->Pirata
-adquirirTesoro pirata tesoro = pirata {botin = botin pirata ++ [tesoro]}
+adquirirTesoro::Tesoro->Pirata->Pirata
+adquirirTesoro tesoro pirata = pirata {botin = botin pirata ++ [tesoro]}
 
 esValioso::Tesoro->Bool
-esValioso tesoro = (snd tesoro) > 100
+esValioso tesoro = valor tesoro > 100
 
 perderTodosLosTesorosValiosos :: Pirata->Pirata
 perderTodosLosTesorosValiosos pirata = pirata {botin = filter(not.esValioso) (botin pirata)}
@@ -44,41 +50,55 @@ perderTodosLosTesorosValiosos pirata = pirata {botin = filter(not.esValioso) (bo
 esIgualA::String->String->Bool
 esIgualA nombre1 nombre2 = nombre1==nombre2
 
-tieneDeNombre::String->Tesoro ->Bool
-tieneDeNombre nombre tesoro = (esIgualA nombre (fst tesoro))
+tieneDeNombre::String->Tesoro->Bool
+tieneDeNombre nombreBuscado tesoro = nombreBuscado == nombreTesoro tesoro
 
 perderTodosLosTesorosSegunNombre::Pirata->String->Pirata
 perderTodosLosTesorosSegunNombre pirata nombre = pirata {botin = filter(not.tieneDeNombre nombre) (botin pirata)}
 
 jackSparrow = UnPirata{
 nombre = "Jack Sparrow",
-botin = [("brujula",10000), ("frasco de arena",0)]
+botin = [brujulaQueApunta,frascoDeArenaConValorCero,doblonesDeOro]
 }
 
-davidJones = UnPirata{
-nombre = "David Jones",
-botin=[("cajita musical",1)]
+davyJones = UnPirata{
+nombre = "Davy Jones",
+botin=[cajitaMusical]
 }
 
 anneBonny = UnPirata{
 nombre="Anne Bonny",
-botin=[("doblones",100),("otro frasco de arena",1)]
+botin=[doblonesDeOro,frascoDeArenaConValorUno]
 }
 
 elizabethSwann = UnPirata{
 nombre = "Elizabeth Swann",
-botin = [("moneda del cofre muerto",100),("espada de hierro",50)]
+botin = [monedaDelCofreDelMuerto,espadaDeHierro]
 }
 
 willTurner = UnPirata{
 nombre = "Will Turner",
-botin = [("cuchillo",5)]
+botin = [cuchilloDelPadre]
 }
+
+brujulaQueApunta = UnTesoro "Brujula que apunta" 10000
+frascoDeArenaConValorCero = UnTesoro "Frasco de arena" 0
+cajitaMusical = UnTesoro "Cajita musical" 1
+doblonesDeOro = UnTesoro "Doblones de oro" 1000
+frascoDeArenaConValorUno = UnTesoro "Frasco de arena" 1
+monedaDelCofreDelMuerto = UnTesoro "Moneda del cofre del muerto" 100
+espadaDeHierro = UnTesoro "Espada de hierro" 50
+cuchilloDelPadre = UnTesoro "Cuchillo del padre" 5
+ron = UnTesoro "Ron" 25
+monedaDePlata = UnTesoro "Moneda de plata" 15
+mapaDeBarbarroja = UnTesoro "Mapa de Barbarroja" 15000
+catalejoMagico = UnTesoro "Catalejo Magico" 500
+sombreroDeAvestruz = UnTesoro "Sombrero de avestruz" 199
 
 ----------------
 soloTesorosValiosos :: Pirata->Tesoro->Pirata
-soloTesorosValiosos pirata tesoro |esValioso tesoro = adquirirTesoro pirata tesoro
-								  |otherwise = pirata
+soloTesorosValiosos pirata tesoro |esValioso tesoro = adquirirTesoro tesoro pirata
+                                  |otherwise = pirata
 
 
 --tesorosConNombreEspecifico pirata tesoro | tieneDeNombre (nombreTesoro pirata) tesoro = adquirirTesoro pirata tesoro
@@ -101,9 +121,12 @@ incorporarPirata barco pirata = barco {tripulacion = tripulacion barco ++ [pirat
 sacarPirata :: Barco->Pirata ->Barco
 sacarPirata barco pirata = barco {tripulacion = delete pirata (tripulacion barco)}
 
--- anclarEnIsla::Barco->String->[Pirata]
--- anclarEnIsla barco isla = map (adquirirTesoro tesoro) (tripulacion barco)
+type Isla = Tesoro
+islaDelRon = ron
+islaTortuga = frascoDeArenaConValorUno
 
+anclarEnIsla::Barco->Isla->Barco
+anclarEnIsla barco isla = barco {tripulacion = map (adquirirTesoro isla) (tripulacion barco)}
 --Ataque
 
 --atacarUnaCiudad barco tesoros | lenght tesoros > lenght (tripulacion barco) = agregarTesorosAPiratas barco tesoros
@@ -124,5 +147,5 @@ tripulacion = [jackSparrow,anneBonny]
 
 holandesErrante = UnBarco {
 nombreBarco = "Holandés Errante",
-tripulacion = [davidJones]
+tripulacion = [davyJones]
 }
