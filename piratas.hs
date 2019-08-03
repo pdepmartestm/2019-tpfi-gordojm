@@ -13,8 +13,11 @@ valor :: Int
 
 data Barco = UnBarco{
 nombreBarco :: String,
-tripulacion :: [Pirata]
-} deriving(Eq, Show)
+tripulacion :: [Pirata],
+formaSaqueo :: FormaDeSaqueo
+} deriving(Show)
+
+type FormaDeSaqueo = Tesoro -> Bool
 
 cantidadTesoros :: Pirata -> Int
 cantidadTesoros pirata = length (botin pirata)
@@ -31,9 +34,20 @@ esAfortunado pirata = (valorBotin pirata) > 10000
 tieneTesoro :: Pirata -> Tesoro -> Bool
 tieneTesoro pirata tesoro = elem tesoro (botin pirata)
 
+distintoValor :: Tesoro -> Tesoro -> Bool
+distintoValor unTesoro otroTesoro = valor unTesoro /= valor otroTesoro 
+
+mismoNombre :: Tesoro -> Tesoro -> Bool
+mismoNombre unTesoro otroTesoro = nombreTesoro unTesoro == nombreTesoro otroTesoro
+
+mismoNombreDistintoValor :: Tesoro -> Tesoro -> Bool
+mismoNombreDistintoValor unTesoro otroTesoro = distintoValor unTesoro otroTesoro && mismoNombre unTesoro otroTesoro
+
 mismoTesoro::Pirata->Pirata->Tesoro->Bool
 mismoTesoro pirata1 pirata2 tesoro = tieneTesoro pirata1 tesoro && tieneTesoro pirata2 tesoro
---mismoDistinto pirata1 pirata2 nombreTesoro = mismoTesoro pirata1 pirata2 tesoro && (snd tesoro) /=
+
+--mismoDistinto :: Pirata -> Pirata -> Tesoro -> Bool
+--mismoDistinto pirata1 pirata2 tesoro = 
 
 tesoroMasValioso::Pirata->Int
 tesoroMasValioso pirata = maximum (valoresBotin pirata)
@@ -41,8 +55,11 @@ tesoroMasValioso pirata = maximum (valoresBotin pirata)
 adquirirTesoro::Tesoro->Pirata->Pirata
 adquirirTesoro tesoro pirata = pirata {botin = botin pirata ++ [tesoro]}
 
-esValioso::Tesoro->Bool
+esValioso::FormaDeSaqueo
 esValioso tesoro = valor tesoro > 100
+
+noEsValioso::FormaDeSaqueo
+noEsValioso tesoro = not (esValioso tesoro)
 
 perderTodosLosTesorosValiosos :: Pirata->Pirata
 perderTodosLosTesorosValiosos pirata = pirata {botin = filter(not.esValioso) (botin pirata)}
@@ -111,7 +128,21 @@ tieneCorazon pirata tesoro = pirata
 
 --Saquear
 
-saquear formaDeSaqueo pirata tesoro = formaDeSaqueo pirata tesoro
+saquear :: FormaDeSaqueo -> Pirata -> Tesoro -> Pirata
+saquear formaDeSaqueo pirata tesoro |formaDeSaqueo tesoro = adquirirTesoro tesoro pirata
+                                    |otherwise = pirata
+
+saqueoEspecifico :: String -> FormaDeSaqueo
+saqueoEspecifico = tieneDeNombre
+
+saqueoValiosos::FormaDeSaqueo
+saqueoValiosos = esValioso
+
+saqueoComplejo :: [FormaDeSaqueo]->FormaDeSaqueo
+saqueoComplejo saqueos tesoro = any (verificaTesoro tesoro) saqueos
+
+verificaTesoro:: Tesoro -> FormaDeSaqueo -> Bool
+verificaTesoro tesoro saqueo = saqueo tesoro
 
 --3
 
@@ -127,10 +158,13 @@ islaTortuga = frascoDeArenaConValorUno
 
 anclarEnIsla::Barco->Isla->Barco
 anclarEnIsla barco isla = barco {tripulacion = map (adquirirTesoro isla) (tripulacion barco)}
+
 --Ataque
 
---atacarUnaCiudad barco tesoros | lenght tesoros > lenght (tripulacion barco) = agregarTesorosAPiratas barco tesoros
--- | otherwise = (tirarPiratas tesoros).(agregarTesorosAPiratas barco) tesoros
+type Ciudad = [Tesoro]
+
+atacarCiudad :: Ciudad -> Barco -> Barco
+atacarCiudad ciudad barco = barco {tripulacion = zipWith (saquear (formaSaqueo barco)) ciudad (tripulacion barco)}
 
 -- agregarTesorosAPiratas barco tesoros = zipWith (saqueo barco) (tripulacion barco) tesoros
 
@@ -142,10 +176,14 @@ anclarEnIsla barco isla = barco {tripulacion = map (adquirirTesoro isla) (tripul
 
 perlaNegra = UnBarco{
 nombreBarco = "Perla Negra",
-tripulacion = [jackSparrow,anneBonny]
+tripulacion = [jackSparrow,anneBonny],
+formaSaqueo = saqueoComplejo [esValioso, saqueoEspecifico "sombrero"]
 }
 
 holandesErrante = UnBarco {
 nombreBarco = "Holandés Errante",
-tripulacion = [davyJones]
+tripulacion = [davyJones],
+formaSaqueo = saqueoEspecifico "cajita"
 }
+
+barcos = [perlaNegra, holandesErrante]
