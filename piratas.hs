@@ -164,7 +164,7 @@ anclarEnIsla barco isla = barco {tripulacion = map (adquirirTesoro isla) (tripul
 type Ciudad = [Tesoro]
 
 atacarCiudad :: Ciudad -> Barco -> Barco
-atacarCiudad ciudad barco = barco {tripulacion = zipWith (saquear (formaSaqueo barco)) ciudad (tripulacion barco)}
+atacarCiudad ciudad barco = barco {tripulacion = zipWith (saquear (formaSaqueo barco)) (tripulacion barco) ciudad}
 
 -- agregarTesorosAPiratas barco tesoros = zipWith (saqueo barco) (tripulacion barco) tesoros
 
